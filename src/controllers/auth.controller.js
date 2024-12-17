@@ -57,23 +57,87 @@ const registerUser = async (req, res) => {
             return responds.error(req, res, {message: 'La cedula ya está utilizada.'}, 409);
         }
 
-        // Encrypt the password using bcrypt before storing it
+        // Encriptando la contraseña
         const newPassword = hashSync(result.password, 10);
 
-        // Construct a new user object with the registration details
-        const newUser = await prisma.usuario.create({
-            data: {
-                cargo: result.cargo,
-                nombre: result.nombre,
-                apellido: result.apellido,
-                password: newPassword,
-                email: result.email,
-                cedula: result.cedula
+        let data;
+
+        if (result.tipoUsuario === 'estudiante') {
+            data = await schema.estudianteRegister.validateAsync({
+                direccion: result.direccion,
+                numeroTelefono: result.numeroTelefono,
+                fechaNacimiento: result.fechaNacimiento
+            })
+        } else if (result.tipoUsuario === 'profesor') {
+            data = await schema.profesorRegister.validateAsync({
+                profesion: result.profesion,
+                direccion: result.direccion,
+                numeroTelefono: result.numeroTelefono,
+                fechaNacimiento: result.fechaNacimiento
+            })
+        }
+
+        // Iniciando una transaccion para asegurar que si algun cambio en la BD no se produce
+        // se devuelvan todos los cambios
+
+        const newUser = await prisma.$transaction(async (prisma) => {
+
+            // Crear el nuevo usuario
+            const user = await prisma.usuario.create({
+                data: {
+                    nombre: result.nombre,
+                    apellido: result.apellido,
+                    password: newPassword,
+                    email: result.email,
+                    cedula: result.cedula,
+                    tipoUsuario: result.tipoUsuario
+                }
+            })
+
+            // Crear la entidad especifica basado en el atributo tipoUsuario
+
+            // Si fuera administrador
+            if (result.tipoUsuario === 'administrador') {
+
+                await prisma.administrador.create({
+                    data: {
+                        usuarioId: user.id
+                    }
+                })
             }
+            // Si fuera profesor
+            else if (result.tipoUsuario === 'profesor') {
+
+                await prisma.profesor.create({
+                    data: {
+                        usuarioId: user.id,
+                        direccion: data.direccion,
+                        fechaNacimiento: new Date(data.fechaNacimiento),
+                        profesion: data.profesion,
+                        numeroTelefono: data.numeroTelefono
+                    }
+                });
+
+            }
+            // Si fuera estudiante
+            else if (result.tipoUsuario === 'estudiante') {
+
+                await prisma.estudiante.create({
+                    data: {
+                        usuarioId: user.id,
+                        direccion: data.direccion,
+                        fechaNacimiento: new Date(data.fechaNacimiento),
+                        numeroTelefono: data.numeroTelefono,
+                    }
+                });
+            }
+
+
+            return user;
         })
 
         // Respond with a success message upon successful registration
-        return responds.success(req, res, { message: 'Usuario registrado exitosamente.' }, 201);
+        return responds.success(req, res, { message: 'Usuario registrado exitosamente.', usuario: newUser }, 201);
 
     } catch (error) {
         // Handle validation errors specifically from Joi
@@ -147,9 +211,7 @@ const loginUser = async (req, res) => {
         // Respond with user data and tokens
         const data = {
             id: user.id,
-            nombre: user.nombre,
-            email: user.email,
-            cargo: user.cargo,
+            tipoUsuario: user.tipoUsuario,
             accessToken,
             refreshToken
         };
@@ -263,15 +325,6 @@ const logoutUser = async (req, res) => {
             }
         })
         
-        //await refreshTokensModel.deleteRecord({ userId: req.user.id });
-
-        // Prepare data for invalidating the current access token
-        // const userInvalidToken = {
-        //     accessToken: req.accessToken.value,
-        //     userId: req.user.id,
-        //     expirationTime: req.accessToken.exp
-        // };
-
         // Insert the access token into the blacklist to prevent further use
         const userInvalidToken = await prisma.invalidToken.create({
             data: {
@@ -280,9 +333,7 @@ const logoutUser = async (req, res) => {
                 expirationTime: req.accessToken.exp
             }
         })
-
-        //await invalidTokensModel.createRecord(userInvalidToken);
-
+        
         // Respond with a success message and a 204 No Content status code
         return responds.success(req, res, '', 204);
 

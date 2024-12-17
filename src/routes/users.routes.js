@@ -5,8 +5,21 @@ import validate from '../middleware/validate.js'
 
 const router = Router();
 
+// Ver los datos del usuario actual
 router.get('/api/users/current', auth.ensureAuthenticated, ctrl.viewUser);
 
+// Cambiar los datos del usuario actual
+router.patch('/api/users/current', auth.ensureAuthenticated, ctrl.changePersonalData);
+
+// Recuperar contraseña
+
+// Paso1: Enviar Email
+router.patch('/api/users/recover', ctrl.recoverStepOne)
+
+// Paso 2: Enviar Respuesta de seguridad, nueva contraseña y confirmación
+router.put('/api/users/recover', ctrl.recoverStepTwo)
+
+// Gestion de usuario como administrador
 router.get('/api/users/', auth.ensureAuthenticated, auth.authorize(['admin']), ctrl.getUsers)
 
 router.get('/api/users/:userId', auth.ensureAuthenticated, auth.authorize(['admin']), validate.validateAndConvertId('userId'), ctrl.getOneUser)
