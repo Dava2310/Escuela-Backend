@@ -8,6 +8,8 @@ import cors from 'cors';
 // Importing routes
 import userRoutes from './routes/users.routes.js';
 import authRoutes from './routes/auth.routes.js';
+import studentsRoutes from './routes/students.routes.js';
+import teacherRoutes from './routes/teachers.routes.js';
 
 // Import Swagger setup
 import swaggerSetup from './swagger.js';  // Ajusta la ruta si es necesario
@@ -32,6 +34,8 @@ app.use(morgan('dev'));
 // Including routes
 app.use(userRoutes);
 app.use(authRoutes);
+app.use('/api/students', studentsRoutes);
+app.use('/api/teachers', teacherRoutes);
 
 // Main Route
 app.get('/', (req, res) => {

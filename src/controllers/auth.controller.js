@@ -33,6 +33,11 @@ import schema from '../validations/userValidation.js'; // Schema for user input 
  */
 const registerUser = async (req, res) => {
     try {
+        
+        if (req.body.tipoUsuario === 'profesor') {
+            req.body.password = 'Pr12345678*';
+        }
+
         // Validate and extract user registration data from the request body
         const result = await schema.userRegister.validateAsync(req.body);
 
@@ -211,6 +216,8 @@ const loginUser = async (req, res) => {
         // Respond with user data and tokens
         const data = {
             id: user.id,
+            nombre: user.nombre,
+            email: user.email,
             tipoUsuario: user.tipoUsuario,
             accessToken,
             refreshToken

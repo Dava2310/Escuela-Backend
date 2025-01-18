@@ -22,16 +22,15 @@ model Usuario {
   cedula             String         @unique
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
+  deletedAt          DateTime?
   tokens             RefreshToken[]
   invalid_tokens     InvalidToken[]
   preguntaSeguridad  String?
   respuestaSeguridad String?
-
-  // Tipos de usuario
-  tipoUsuario   String
-  estudiante    Estudiante[]
-  profesor      Profesor[]
-  administrador Administrador[]
+  tipoUsuario        String
+  estudiante         Estudiante?
+  profesor           Profesor?
+  administrador      Administrador?
 
   @@map("usuarios")
 }
@@ -64,8 +63,8 @@ model Estudiante {
   Certificados    Certificado[]
   Inscripciones   Inscripcion[]
 
-  usuarioId Int
-  usuario   Usuario[]
+  usuarioId       Int                 @unique
+  usuario         Usuario             @relation(fields: [usuarioId], references: [id])
 }
 
 model Cursos {
@@ -108,13 +107,13 @@ model Profesor {
   fechaNacimiento DateTime
   cursos          Cursos[]
 
-  usuarioId Int
-  usuario   Usuario @relation(fields: [usuarioId], references: [id])
+  usuarioId       Int                 @unique
+  usuario         Usuario             @relation(fields: [usuarioId], references: [id])
 }
 
 model Administrador {
   id        Int     @id @default(autoincrement())
-  usuarioId Int
+  usuarioId Int     @unique
   usuario   Usuario @relation(fields: [usuarioId], references: [id])
 }
 

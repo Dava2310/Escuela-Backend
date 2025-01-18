@@ -345,7 +345,7 @@ const recoverStepOne = async (req, res) => {
         }
 
         // En caso de existir, mandamos un mensaje de exito
-        return responds.success(req, res, {message: 'Usuario encontrado.'}, 200);
+        return responds.success(req, res, {message: 'Usuario encontrado.', data: {id: usuario.id}}, 200);
 
     } catch (error) {
 
@@ -353,6 +353,32 @@ const recoverStepOne = async (req, res) => {
             return responds.error(req, res, { message: error.message }, 422)
         }
 
+        return responds.error(req, res, {message: error.message}, 500);
+    }
+}
+
+const recoverStepTwoGet = async (req, res) => {
+    try {
+        
+        // Recibimos el ID de usuario
+        const { id } = req.params;
+
+        // Buscamos el usuario
+        const usuario = await prisma.usuario.findFirst({
+            where: {
+                id: id
+            }
+        })
+
+        // Si no existe un usuario, error
+        if (!usuario) {
+            return responds.error(req, res, {message: 'No se pudo encontrar el usuario.'}, 404);
+        }
+
+        // En caso de existir, mandamos la pregunta de seguridad
+        return responds.success(req, res, {data: {preguntaSeguridad: usuario.preguntaSeguridad}}, 200);
+
+    } catch (error) {
         return responds.error(req, res, {message: error.message}, 500);
     }
 }
@@ -406,5 +432,5 @@ const recoverStepTwo = async (req, res) => {
     }
 }
 
-export default { viewUser, editUser, deleteUser, getUsers, getOneUser, changePersonalData, recoverStepOne, recoverStepTwo };
+export default { viewUser, editUser, deleteUser, getUsers, getOneUser, changePersonalData, recoverStepOne, recoverStepTwoGet, recoverStepTwo };
 

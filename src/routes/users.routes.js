@@ -16,7 +16,10 @@ router.patch('/api/users/current', auth.ensureAuthenticated, ctrl.changePersonal
 // Paso1: Enviar Email
 router.patch('/api/users/recover', ctrl.recoverStepOne)
 
-// Paso 2: Enviar Respuesta de seguridad, nueva contraseña y confirmación
+// Paso 2.1: Conseguir la pregunta de seguridad asociado al ID de usuario
+router.get('/api/users/recover/:id', validate.validateAndConvertId('id'), ctrl.recoverStepTwoGet)
+
+// Paso 2.2: Enviar Respuesta de seguridad, nueva contraseña y confirmación
 router.put('/api/users/recover', ctrl.recoverStepTwo)
 
 // Gestion de usuario como administrador

@@ -18,13 +18,12 @@ const userRegister = Joi.object({
     password: Joi.string()
         .min(8)
         .required()
-        .pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$'))
+        .pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&.])[A-Za-z\\d@$!%*?&.]{8,}$'))
         .messages({
             'string.min': 'La contraseña debe tener al menos 8 caracteres.',
             'string.pattern.base': 'La contraseña debe contener al menos una letra mayúscula, una letra minúscula, un número y un carácter especial.',
             'any.required': 'La contraseña es obligatoria.'
         }),
-
 
     // Tipo de Usuario
     tipoUsuario: Joi.string().valid(...['administrador', 'profesor', 'estudiante']).required(),
@@ -45,6 +44,27 @@ const profesorRegister = Joi.object({
 })
 
 const estudianteRegister = Joi.object({
+    direccion: Joi.string().required(),
+    numeroTelefono: Joi.string().required(),
+    fechaNacimiento: Joi.string().required(),
+})
+
+const estudianteEdit = Joi.object({
+    nombre: Joi.string().min(3).max(50).required(),
+    apellido: Joi.string().min(3).max(99).required(),
+    email: Joi.string().email().lowercase().required(),
+    cedula: Joi.string().required(),
+    direccion: Joi.string().required(),
+    numeroTelefono: Joi.string().required(),
+    fechaNacimiento: Joi.string().required(),
+})
+
+const profesorEdit = Joi.object({
+    nombre: Joi.string().min(3).max(50).required(),
+    apellido: Joi.string().min(3).max(99).required(),
+    email: Joi.string().email().lowercase().required(),
+    cedula: Joi.string().required(),
+    profesion: Joi.string().required(),
     direccion: Joi.string().required(),
     numeroTelefono: Joi.string().required(),
     fechaNacimiento: Joi.string().required(),
@@ -141,7 +161,7 @@ const recuperarPassword_1 = Joi.object({
 const recuperarPassword_2 = Joi.object({
 
     email: Joi.string().email().required(),
-
+    preguntaSeguridad: Joi.string().required(),
     respuestaSeguridad: Joi.string().required(),
     // New password
     newPassword: Joi.string()
@@ -169,13 +189,15 @@ const recuperarPassword_2 = Joi.object({
         }),
 })
 
-export default { 
-    userRegister, 
-    profesorRegister, 
-    estudianteRegister, 
-    userLogin, 
-    userEdit, 
+export default {
+    userRegister,
+    profesorRegister,
+    estudianteRegister,
+    userLogin,
+    userEdit,
     changePassword,
     recuperarPassword_1,
-    recuperarPassword_2 
+    recuperarPassword_2,
+    estudianteEdit,
+    profesorEdit
 };
