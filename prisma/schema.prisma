@@ -63,22 +63,26 @@ model Estudiante {
   Certificados    Certificado[]
   Inscripciones   Inscripcion[]
 
-  usuarioId       Int                 @unique
-  usuario         Usuario             @relation(fields: [usuarioId], references: [id])
+  usuarioId Int     @unique
+  usuario   Usuario @relation(fields: [usuarioId], references: [id])
 }
 
 model Cursos {
   id            Int                 @id @default(autoincrement())
-  Nombre        String
-  Codigo        String              @unique
-  Descripcion   String
-  horarioId     Int
-  horario       Horario             @relation(fields: [horarioId], references: [id])
+  nombre        String
+  codigo        String              @unique
+  descripcion   String
+  horarioId     Int?                @unique // Campo horarioId marcado como único
+  horario       Horario?            @relation(fields: [horarioId], references: [id])
   profesorId    Int
   profesor      Profesor            @relation(fields: [profesorId], references: [id])
   Estudiantes   Estudiante_Cursos[]
   Certificados  Certificado[]
   Inscripciones Inscripcion[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 }
 
 model Estudiante_Cursos {
@@ -90,13 +94,24 @@ model Estudiante_Cursos {
 }
 
 model Horario {
-  id          Int      @id @default(autoincrement())
+  id          Int          @id @default(autoincrement())
   fechaInicio DateTime
   fechaFinal  DateTime
-  horaInicio  String
-  horaFinal   String
-  salon       String
-  curso       Cursos[]
+  estado      Boolean      @default(true)
+  capacidad   Int
+  tipo        String?
+  dias        DiaHorario[]
+  curso       Cursos? // Relación opcional con curso
+}
+
+model DiaHorario {
+  id         Int     @id @default(autoincrement())
+  dia        String
+  horaInicio String
+  horaFinal  String
+  salon      String
+  horarioId  Int
+  horario    Horario @relation(fields: [horarioId], references: [id])
 }
 
 model Profesor {
@@ -107,8 +122,8 @@ model Profesor {
   fechaNacimiento DateTime
   cursos          Cursos[]
 
-  usuarioId       Int                 @unique
-  usuario         Usuario             @relation(fields: [usuarioId], references: [id])
+  usuarioId Int     @unique
+  usuario   Usuario @relation(fields: [usuarioId], references: [id])
 }
 
 model Administrador {
