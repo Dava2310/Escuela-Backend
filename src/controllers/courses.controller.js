@@ -139,6 +139,54 @@ const getOneCourse = async (req, res) => {
     }
 }
 
+const getStudentCourses = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // Obtener el estudiante relacionado con el usuario
+        const estudiante = await prisma.estudiante.findUnique({
+            where: { usuarioId: userId },
+            include: {
+                secciones: true
+            }
+        });
+
+        if (!estudiante) {
+            return responds.error(req, res, { message: 'Estudiante no encontrado.' }, 404);
+        }
+
+        // Obtener todos los cursos activos (sin deletedAt)
+        const courses = await prisma.cursos.findMany({
+            where: {
+                deletedAt: null
+            },
+            include: {
+                secciones: {
+                    include: {
+                        estudiantes: true // Trae los estudiantes inscritos en cada sección
+                    }
+                }
+            }
+        });
+
+        // Agregar la propiedad 'inscrito' a cada curso
+        const coursesWithEnrollment = courses.map(course => {
+            const isEnrolled = course.secciones.some(seccion =>
+                seccion.estudiantes.some(estudianteSeccion => estudianteSeccion.idEstudiante === estudiante.id)
+            );
+            return {
+                ...course,
+                inscrito: isEnrolled
+            };
+        });
+
+        return responds.success(req, res, { message: 'Cursos obtenidos exitosamente.', data: coursesWithEnrollment }, 200);
+    } catch (error) {
+        console.error(error);
+        return responds.error(req, res, { message: 'Error al obtener los cursos.' }, 500);
+    }
+};
+
 const createCourse = async (req, res) => {
     try {
         const data = await schema.courseRegister.validateAsync(req.body);
@@ -257,6 +305,7 @@ const deleteCourse = async (req, res) => {
 export default {
     getCourses,
     getOneCourse,
+    getStudentCourses,
     createCourse,
     updateCourse,
     deleteCourse,

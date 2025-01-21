@@ -72,4 +72,25 @@ const createSeccion = async (req, res) => {
     }
 }
 
-export default { createSeccion }
+const getSecciones = async (req, res) => {
+    try {
+
+        const { cursoId } = req.params;
+
+        const secciones = await prisma.seccion.findMany({
+            where: {
+                cursoId: cursoId
+            }
+        })
+
+        return responds.success(req, res, {data: secciones}, 200);
+
+    } catch (error) {
+        return responds.error(req, res, {message: error.message}, 500);
+    }
+}
+
+export default { 
+    createSeccion,
+    getSecciones
+}

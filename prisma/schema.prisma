@@ -171,7 +171,7 @@ model Inscripcion {
   fechaExpedicion DateTime
   banco           String
   monto           Float
-  observaciones   String
+  observaciones   String?
 
   seccionId Int
   seccion   Seccion @relation(fields: [seccionId], references: [id])

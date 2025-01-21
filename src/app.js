@@ -13,6 +13,7 @@ import teacherRoutes from './routes/teachers.routes.js';
 import coursesRoutes from './routes/courses.routes.js'
 import schedulesRoutes from './routes/schedules.routes.js'
 import seccionesRoutes from './routes/secciones.routes.js'
+import inscripcionesRoutes from './routes/inscripciones.routes.js'
 
 // Import Swagger setup
 import swaggerSetup from './swagger.js';  // Ajusta la ruta si es necesario
@@ -42,6 +43,7 @@ app.use('/api/teachers', teacherRoutes);
 app.use('/api/courses', coursesRoutes);
 app.use('/api/schedules', schedulesRoutes)
 app.use('/api/secciones', seccionesRoutes)
+app.use('/api/inscripciones', inscripcionesRoutes)
 
 // Main Route
 app.get('/', (req, res) => {

@@ -5,6 +5,9 @@ import validate from "../middleware/validate.js"
 
 const router = Router();
 
+// Ruta GET para conseguir todos los cursos de la academia, con la informacion de si esta inscrito o no un estudiante
+router.get('/student/', auth.ensureAuthenticated, ctrl.getStudentCourses)
+
 // Ruta GET para conseguir todos los cursos
 router.get('/', auth.ensureAuthenticated, ctrl.getCourses)
 
