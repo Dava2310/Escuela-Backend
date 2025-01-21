@@ -8,6 +8,9 @@ const router = Router();
 // Ruta GET para conseguir todos los cursos
 router.get('/', auth.ensureAuthenticated, ctrl.getCourses)
 
+// Ruta GET para conseguir todos los cursos y sus horarios
+router.get('/schedules/', auth.ensureAuthenticated, ctrl.getCourses_Schedule)
+
 // Ruta GET para conseguir información de un unico curso
 router.get('/:courseId', auth.ensureAuthenticated, validate.validateAndConvertId('courseId'), ctrl.getOneCourse)
 

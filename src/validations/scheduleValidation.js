@@ -18,14 +18,6 @@ const horarioSchema = Joi.object({
   // Estado del horario
   estado: Joi.boolean().default(true),
 
-  // Capacidad de estudiantes
-  capacidad: Joi.number().integer().min(1).required()
-    .messages({
-      'number.base': 'La capacidad debe ser un número entero.',
-      'number.min': 'La capacidad debe ser al menos 1.',
-      'any.required': 'La capacidad es obligatoria.'
-    }),
-
   // Tipo de horario: Presencial o Virtual
   tipo: Joi.string().valid('Presencial', 'Virtual').required()
     .messages({
@@ -40,28 +32,34 @@ const horarioSchema = Joi.object({
       'any.required': 'El ID del curso es obligatorio.'
     }),
 
-  // Validación para los días del horario
-  dias: Joi.array().items(
+  // ID de la seccion asociado
+  seccionId: Joi.number().integer().positive().required()
+    .messages({
+      'number.base': 'El ID de la sección debe ser un número entero.',
+      'any.required': 'El ID de la sección es obligatorio.'
+    }),
+
+  // Hora de inicio global
+  horaInicio: Joi.string().pattern(/^([0-1]\d|2[0-3]):([0-5]\d)$/).required()
+    .messages({
+      'string.pattern.base': 'La hora de inicio debe estar en formato HH:MM (24 horas).',
+      'any.required': 'La hora de inicio es obligatoria.'
+    }),
+
+  // Hora de finalización global
+  horaFinal: Joi.string().pattern(/^([0-1]\d|2[0-3]):([0-5]\d)$/).required()
+    .messages({
+      'string.pattern.base': 'La hora de finalización debe estar en formato HH:MM (24 horas).',
+      'any.required': 'La hora de finalización es obligatoria.'
+    }),
+
+  // Validación para los días del horario (días son opcionales)
+  diasRepeticion: Joi.array().items(
     Joi.object({
       dia: Joi.string().valid('Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo').required()
         .messages({
           'any.only': 'El día debe ser uno de: Lunes, Martes, Miércoles, Jueves, Viernes, Sábado, Domingo.',
           'any.required': 'El día es obligatorio.'
-        }),
-      horaInicio: Joi.string().pattern(/^([0-1]\d|2[0-3]):([0-5]\d)$/).required()
-        .messages({
-          'string.pattern.base': 'La hora de inicio debe estar en formato HH:MM (24 horas).',
-          'any.required': 'La hora de inicio es obligatoria.'
-        }),
-      horaFinal: Joi.string().pattern(/^([0-1]\d|2[0-3]):([0-5]\d)$/).required()
-        .messages({
-          'string.pattern.base': 'La hora de finalización debe estar en formato HH:MM (24 horas).',
-          'any.required': 'La hora de finalización es obligatoria.'
-        }),
-      salon: Joi.string().min(1).max(100).required()
-        .messages({
-          'string.base': 'El salón debe ser un texto.',
-          'any.required': 'El salón es obligatorio.'
         })
     })
   ).min(1).required()

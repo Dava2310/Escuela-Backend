@@ -20,14 +20,99 @@ const getCourses = async (req, res) => {
         const courses = await prisma.cursos.findMany({
             where: {
                 deletedAt: null
+            },
+            include: {
+                // Incluimos las secciones
+                secciones: {
+                    include: {
+                        estudiantes: true // Relación con estudiantes dentro de la sección
+                    }
+                },
             }
         });
+
+        for (let course of courses) {
+            course.estado = 'activo';
+
+            // Contar la cantidad total de estudiantes en todas las secciones del curso
+            let totalEstudiantes = 0;
+            for (let seccion of course.secciones) {
+                totalEstudiantes += seccion.estudiantes.length; // Contamos los estudiantes por sección
+            }
+
+            // Asignar la matrícula total al curso
+            course.matricula = totalEstudiantes;
+            course.estado = 'activo'
+        }
+
         return responds.success(req, res, { data: courses }, 200);
 
     } catch (error) {
         return responds.error(req, res, { message: error.message }, 500);
     }
 }
+
+const removeAccents = (str) => {
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+};
+const getCourses_Schedule = async (req, res) => {
+    try {
+        const courses = await prisma.cursos.findMany({
+            where: {
+                deletedAt: null
+            },
+            include: {
+                secciones: {
+                    include: {
+                        estudiantes: true,
+                        horario: { 
+                            include: {
+                                dias: true
+                            }
+                        }
+                    }
+                },
+            }
+        });
+
+        for (let course of courses) {
+            course.estado = 'activo';
+
+            // Contar la cantidad total de estudiantes en todas las secciones del curso
+            let totalEstudiantes = 0;
+            for (let seccion of course.secciones) {
+                totalEstudiantes += seccion.estudiantes.length; // Contamos los estudiantes por sección
+            }
+
+            // Asignar la matrícula total al curso
+            course.matricula = totalEstudiantes;
+
+            // Transformar el formato de los horarios en cada sección
+            for (let seccion of course.secciones) {
+                if (seccion.horario) {
+                    // Transformar el array de días a minúsculas y sin acentos
+                    const diasRepeticion = seccion.horario.dias.map(dia => removeAccents(dia.dia));
+                    
+                    // Crear un nuevo objeto horario con el formato esperado
+                    seccion.horario = {
+                        id: seccion.horario.id,
+                        fechaInicio: seccion.horario.fechaInicio,
+                        fechaFin: seccion.horario.fechaFinal,
+                        horaInicio: seccion.horario.horaInicio,
+                        horaFinal: seccion.horario.horaFinal,
+                        diasRepeticion, // Los días transformados
+                        tipo: seccion.horario.tipo
+                    };
+                }
+            }
+        }
+
+        return responds.success(req, res, { data: courses }, 200);
+
+    } catch (error) {
+        return responds.error(req, res, { message: error.message }, 500);
+    }
+};
 
 const getOneCourse = async (req, res) => {
     try {
@@ -71,23 +156,6 @@ const createCourse = async (req, res) => {
             return responds.error(req, res, { message: 'Codigo ya utilizado.' }, 409);
         }
 
-        // Verificando la existencia del profesor y que este activo en el sistema
-        const teacher = await prisma.profesor.findFirst({
-            where: {
-                AND: [
-                    { id: data.profesorId },
-                    { usuario: { deletedAt: null } }
-                ]
-            },
-            include: {
-                usuario: true
-            }
-        });
-
-        if (!teacher) {
-            return responds.error(req, res, { message: 'Este profesor no está disponible.' }, 409);
-        }
-
         // Creando el curso
         const newCourse = await prisma.cursos.create({
             data: data
@@ -119,7 +187,7 @@ const updateCourse = async (req, res) => {
         }
 
         // Obteniendo los datos y validándolos
-        const data = await schema.courseRegister.validateAsync(req.body);
+        const data = await schema.courseEdit.validateAsync(req.body);
 
         // Verificando que no se duplique el codigo del curso contra otros cursos diferentes
         const cursoDuplicado = await prisma.cursos.findFirst({
@@ -137,23 +205,6 @@ const updateCourse = async (req, res) => {
 
         if (cursoDuplicado) {
             return responds.error(req, res, { message: 'Codigo ya utilizado.' }, 409);
-        }
-
-        // Verificando la existencia del profesor y que este activo en el sistema
-        const teacher = await prisma.profesor.findFirst({
-            where: {
-                AND: [
-                    { id: data.profesorId },
-                    { usuario: { deletedAt: null } }
-                ]
-            },
-            include: {
-                usuario: true
-            }
-        });
-
-        if (!teacher) {
-            return responds.error(req, res, { message: 'El profesor asignado no está disponible.' }, 409);
         }
 
         // Realizando la modificacion
@@ -208,5 +259,6 @@ export default {
     getOneCourse,
     createCourse,
     updateCourse,
-    deleteCourse
+    deleteCourse,
+    getCourses_Schedule
 }

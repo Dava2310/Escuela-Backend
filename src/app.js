@@ -11,6 +11,8 @@ import authRoutes from './routes/auth.routes.js';
 import studentsRoutes from './routes/students.routes.js';
 import teacherRoutes from './routes/teachers.routes.js';
 import coursesRoutes from './routes/courses.routes.js'
+import schedulesRoutes from './routes/schedules.routes.js'
+import seccionesRoutes from './routes/secciones.routes.js'
 
 // Import Swagger setup
 import swaggerSetup from './swagger.js';  // Ajusta la ruta si es necesario
@@ -38,6 +40,8 @@ app.use(authRoutes);
 app.use('/api/students', studentsRoutes);
 app.use('/api/teachers', teacherRoutes);
 app.use('/api/courses', coursesRoutes);
+app.use('/api/schedules', schedulesRoutes)
+app.use('/api/secciones', seccionesRoutes)
 
 // Main Route
 app.get('/', (req, res) => {

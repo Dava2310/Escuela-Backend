@@ -52,75 +52,97 @@ model InvalidToken {
   usuario        Usuario @relation(fields: [userId], references: [id])
 }
 
-model Estudiante {
-  id              Int                 @id @default(autoincrement())
-  fechaNacimiento DateTime
-  direccion       String
-  numeroTelefono  String
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
-  Cursos          Estudiante_Cursos[]
-  Certificados    Certificado[]
-  Inscripciones   Inscripcion[]
-
-  usuarioId Int     @unique
-  usuario   Usuario @relation(fields: [usuarioId], references: [id])
-}
-
 model Cursos {
-  id            Int                 @id @default(autoincrement())
-  nombre        String
-  codigo        String              @unique
-  descripcion   String
-  horarioId     Int?                @unique // Campo horarioId marcado como único
-  horario       Horario?            @relation(fields: [horarioId], references: [id])
-  profesorId    Int
-  profesor      Profesor            @relation(fields: [profesorId], references: [id])
-  Estudiantes   Estudiante_Cursos[]
-  Certificados  Certificado[]
-  Inscripciones Inscripcion[]
+  id          Int    @id @default(autoincrement())
+  nombre      String
+  codigo      String @unique
+  descripcion String
+  categoria   String
+
+  // Relaciones
+  secciones Seccion[] // Relacion con multiples secciones
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 }
 
-model Estudiante_Cursos {
-  idEstudiante Int @id
-  idCurso      Int
+model Seccion {
+  id            Int                  @id @default(autoincrement())
+  codigo        String               @unique
+  capacidad     Int
+  salon         String
+  profesorId    Int
+  profesor      Profesor             @relation(fields: [profesorId], references: [id])
+  cursoId       Int
+  curso         Cursos               @relation(fields: [cursoId], references: [id])
+  horarioId     Int? // Ahora es opcional
+  horario       Horario? // Relación con Horario, opcional
+  estudiantes   Estudiante_Seccion[]
+  certificados  Certificado[]
+  inscripciones Inscripcion[]
 
-  curso      Cursos     @relation(fields: [idCurso], references: [id])
+  // Relación 1:1 con Horario
+  @@map("secciones")
+}
+
+model Estudiante {
+  id              Int      @id @default(autoincrement())
+  fechaNacimiento DateTime
+  direccion       String
+  numeroTelefono  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  secciones     Estudiante_Seccion[]
+  Certificados  Certificado[]
+  Inscripciones Inscripcion[]
+
+  usuarioId Int     @unique
+  usuario   Usuario @relation(fields: [usuarioId], references: [id])
+}
+
+model Estudiante_Seccion {
+  idEstudiante Int
+  idSeccion    Int
+
+  seccion    Seccion    @relation(fields: [idSeccion], references: [id])
   estudiante Estudiante @relation(fields: [idEstudiante], references: [id])
+
+  @@id([idEstudiante, idSeccion])
 }
 
 model Horario {
   id          Int          @id @default(autoincrement())
   fechaInicio DateTime
   fechaFinal  DateTime
-  estado      Boolean      @default(true)
-  capacidad   Int
-  tipo        String?
+  horaInicio  String
+  horaFinal   String
   dias        DiaHorario[]
-  curso       Cursos? // Relación opcional con curso
+  estado      Boolean      @default(true)
+  seccionId   Int          @unique // Relación con Sección
+  seccion     Seccion      @relation(fields: [seccionId], references: [id])
+  tipo        String
+
+  // Relación 1:1 con Sección
+  @@map("horarios")
 }
 
 model DiaHorario {
-  id         Int     @id @default(autoincrement())
-  dia        String
-  horaInicio String
-  horaFinal  String
-  salon      String
-  horarioId  Int
-  horario    Horario @relation(fields: [horarioId], references: [id])
+  id        Int     @id @default(autoincrement())
+  dia       String // Día de la semana (Lunes, Martes, etc.)
+  horarioId Int // Relación con Horario
+  horario   Horario @relation(fields: [horarioId], references: [id]) // Relación con Horario
 }
 
 model Profesor {
-  id              Int      @id @default(autoincrement())
+  id              Int       @id @default(autoincrement())
   profesion       String
   direccion       String
   numeroTelefono  String
   fechaNacimiento DateTime
-  cursos          Cursos[]
+  secciones       Seccion[]
 
   usuarioId Int     @unique
   usuario   Usuario @relation(fields: [usuarioId], references: [id])
@@ -136,24 +158,23 @@ model Certificado {
   id              Int        @id @default(autoincrement())
   titulo          String
   descripcion     String
-  cursoId         Int
-  curso           Cursos     @relation(fields: [cursoId], references: [id])
+  seccionId       Int
+  seccion         Seccion    @relation(fields: [seccionId], references: [id])
   fechaExpedicion DateTime
   estudianteId    Int
   estudiante      Estudiante @relation(fields: [estudianteId], references: [id])
 }
 
 model Inscripcion {
-  id Int @id @default(autoincrement())
-
+  id              Int      @id @default(autoincrement())
   referenciaPago  String
   fechaExpedicion DateTime
   banco           String
   monto           Float
   observaciones   String
 
-  cursoId Int
-  curso   Cursos @relation(fields: [cursoId], references: [id])
+  seccionId Int
+  seccion   Seccion @relation(fields: [seccionId], references: [id])
 
   estudianteId Int
   estudiante   Estudiante @relation(fields: [estudianteId], references: [id])
