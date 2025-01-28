@@ -65,7 +65,7 @@ const getCourses_Schedule = async (req, res) => {
                 secciones: {
                     include: {
                         estudiantes: true,
-                        horario: { 
+                        horario: {
                             include: {
                                 dias: true
                             }
@@ -92,7 +92,7 @@ const getCourses_Schedule = async (req, res) => {
                 if (seccion.horario) {
                     // Transformar el array de días a minúsculas y sin acentos
                     const diasRepeticion = seccion.horario.dias.map(dia => removeAccents(dia.dia));
-                    
+
                     // Crear un nuevo objeto horario con el formato esperado
                     seccion.horario = {
                         id: seccion.horario.id,
@@ -146,9 +146,7 @@ const getStudentCourses = async (req, res) => {
         // Obtener el estudiante relacionado con el usuario
         const estudiante = await prisma.estudiante.findUnique({
             where: { usuarioId: userId },
-            include: {
-                secciones: true
-            }
+            include: { secciones: true }
         });
 
         if (!estudiante) {
@@ -157,28 +155,36 @@ const getStudentCourses = async (req, res) => {
 
         // Obtener todos los cursos activos (sin deletedAt)
         const courses = await prisma.cursos.findMany({
-            where: {
-                deletedAt: null
-            },
+            where: { deletedAt: null },
             include: {
                 secciones: {
                     include: {
-                        estudiantes: true // Trae los estudiantes inscritos en cada sección
+                        inscripciones: {
+                            where: {
+                                AND: [
+                                    { estudianteId: estudiante.id },
+                                    { deletedAt: null }
+                                ]
+                            },
+                            orderBy: { createdAt: 'desc' }, // Ordenar por la inscripción más reciente
+                            select: { estado: true, createdAt: true } // Obtener estado y fecha
+                        }
                     }
                 }
             }
         });
 
-        // Agregar la propiedad 'inscrito' a cada curso
-        const coursesWithEnrollment = courses.map(course => {
-            const isEnrolled = course.secciones.some(seccion =>
-                seccion.estudiantes.some(estudianteSeccion => estudianteSeccion.idEstudiante === estudiante.id)
-            );
-            return {
-                ...course,
-                inscrito: isEnrolled
-            };
-        });
+        // Agregar la propiedad 'inscrito' con el estado correspondiente de la inscripción más reciente
+        const coursesWithEnrollment = courses.map(course => ({
+            ...course,
+            inscrito: course.secciones.reduce((state, seccion) => {
+                const inscripcion = seccion.inscripciones[0]; // Obtener la inscripción más reciente si existe
+                if (inscripcion) {
+                    return inscripcion.estado === 'No Aprobada' ? 'No Inscrito' : inscripcion.estado;
+                }
+                return 'No Inscrito'; // Si no hay inscripción, se considera 'No Inscrito'
+            }, 'No Inscrito')
+        }));
 
         return responds.success(req, res, { message: 'Cursos obtenidos exitosamente.', data: coursesWithEnrollment }, 200);
     } catch (error) {

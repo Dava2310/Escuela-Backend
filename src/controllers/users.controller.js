@@ -205,7 +205,6 @@ const deleteUser = async (req, res) => {
             }
         })
 
-        // Return the updated productor
         return responds.success(req, res, { message: "Usuario eliminado con éxito." }, 200);
     } catch (error) {
         // Respond with a generic error message for other errors

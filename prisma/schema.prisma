@@ -110,6 +110,9 @@ model Estudiante_Seccion {
   seccion    Seccion    @relation(fields: [idSeccion], references: [id])
   estudiante Estudiante @relation(fields: [idEstudiante], references: [id])
 
+  // Estado de aprobado
+  aprobado Boolean? @default(false)
+
   @@id([idEstudiante, idSeccion])
 }
 
@@ -178,4 +181,10 @@ model Inscripcion {
 
   estudianteId Int
   estudiante   Estudiante @relation(fields: [estudianteId], references: [id])
+
+  estado String @default("En Espera") // En Espera, Aprobada, No Aprobada
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 }
