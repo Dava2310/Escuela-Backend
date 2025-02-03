@@ -146,6 +146,11 @@ const updateStudent = async (req, res) => {
 
         return responds.success(req, res, { data: updatedStudent, message: "Estudiante actualizado exitosamente." }, 200);
     } catch (error) {
+
+        if (error instanceof Joi.ValidationError) {
+            return responds.error(req, res, { message: error.details[0].message }, 422);
+        }
+
         responds.error(req, res, { message: error.message }, 500);
     }
 }
@@ -156,7 +161,7 @@ const deleteStudent = async (req, res) => {
 
         // Buscar al estudiante incluyendo su relación con usuario
         const student = await prisma.estudiante.findUnique({
-            where: { id: studentId }, 
+            where: { id: studentId },
             include: { usuario: true }  // Incluir datos del usuario para acceder al usuarioId
         });
 

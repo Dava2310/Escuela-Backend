@@ -218,6 +218,11 @@ const createCourse = async (req, res) => {
         return responds.success(req, res, { message: 'Curso creado exitosamente.', data: newCourse }, 201);
 
     } catch (error) {
+
+        if (error instanceof Joi.ValidationError) {
+            return responds.error(req, res, { message: error.details[0].message }, 422);
+        }
+
         return responds.error(req, res, { message: error.message }, 500);
     }
 }
@@ -272,6 +277,11 @@ const updateCourse = async (req, res) => {
         return responds.success(req, res, { data: updatedCourse, message: "Curso modificado exitosamente." }, 200);
 
     } catch (error) {
+
+        if (error instanceof Joi.ValidationError) {
+            return responds.error(req, res, { message: error.details[0].message }, 422);
+        }
+
         return responds.error(req, res, { message: error.message }, 500);
     }
 }

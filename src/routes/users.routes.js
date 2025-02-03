@@ -23,13 +23,13 @@ router.get('/api/users/recover/:id', validate.validateAndConvertId('id'), ctrl.r
 router.put('/api/users/recover', ctrl.recoverStepTwo)
 
 // Gestion de usuario como administrador
-router.get('/api/users/', auth.ensureAuthenticated, auth.authorize(['admin']), ctrl.getUsers)
+router.get('/api/users/', auth.ensureAuthenticated, auth.authorize('administrador'), ctrl.getUsers)
 
-router.get('/api/users/:userId', auth.ensureAuthenticated, auth.authorize(['admin']), validate.validateAndConvertId('userId'), ctrl.getOneUser)
+router.get('/api/users/:userId', auth.ensureAuthenticated, validate.validateAndConvertId('userId'), ctrl.getOneUser)
 
-router.patch('/api/users/:userId', auth.ensureAuthenticated, auth.authorize(['admin']), validate.validateAndConvertId('userId'), ctrl.editUser)
+router.patch('/api/users/:userId', auth.ensureAuthenticated, validate.validateAndConvertId('userId'), ctrl.editUser)
 
-router.delete('/api/users/:userId', auth.ensureAuthenticated, auth.authorize(['admin']), validate.validateAndConvertId('userId'), ctrl.deleteUser)
+router.delete('/api/users/:userId', auth.ensureAuthenticated, validate.validateAndConvertId('userId'), ctrl.deleteUser)
 
 
 export default router;

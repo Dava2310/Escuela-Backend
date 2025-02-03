@@ -15,6 +15,7 @@ import schedulesRoutes from './routes/schedules.routes.js'
 import seccionesRoutes from './routes/secciones.routes.js'
 import inscripcionesRoutes from './routes/inscripciones.routes.js'
 import statisticsRoutes from './routes/statistics.routes.js'
+import certificatesRoutes from './routes/certificates.routes.js'
 
 // Import Swagger setup
 import swaggerSetup from './swagger.js';  // Ajusta la ruta si es necesario
@@ -34,7 +35,7 @@ app.use(express.json());
 app.set('port', config.app.port);
 
 // Middlewares
-app.use(morgan('dev'));
+// app.use(morgan('dev'));
 
 // Including routes
 app.use(userRoutes);
@@ -46,6 +47,7 @@ app.use('/api/schedules', schedulesRoutes)
 app.use('/api/secciones', seccionesRoutes)
 app.use('/api/inscripciones', inscripcionesRoutes)
 app.use('/api/statistics', statisticsRoutes)
+app.use('/api/certificates', certificatesRoutes)
 
 // Main Route
 app.get('/', (req, res) => {

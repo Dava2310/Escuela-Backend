@@ -84,7 +84,7 @@ const ensureAuthenticated = async (req, res, next) => {
 
 
 // Middleware to ensure authorization by user roles
-const authorize = (cargos = []) => {
+const authorize = (tipoUsuario) => {
     return async function (req, res, next) {
 
         try {
@@ -95,7 +95,7 @@ const authorize = (cargos = []) => {
                 }
             })
 
-            if (!user || !cargos.includes(user.cargo)) {
+            if (!(user.tipoUsuario === tipoUsuario)) {
                 return responds.error(req, res, { message: 'Usted no cuenta con este nivel de modificación.' }, 403)
             }
 

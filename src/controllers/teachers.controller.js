@@ -110,7 +110,7 @@ const updateTeacher = async (req, res) => {
         const { error } = schema.profesorEdit.validate(teacherData);
 
         if (error) {
-            return responds.error(req, res, { message: error.details[0].message }, 400);
+            return responds.error(req, res, { message: error.details[0].message }, 422);
         }
 
         // Convertir fecha de nacimiento a formato ISO 8601
@@ -139,6 +139,10 @@ const updateTeacher = async (req, res) => {
 
         return responds.success(req, res, { data: updatedTeacher, message: 'Profesor actualizado correctamente.' }, 200);
     } catch (error) {
+        if (error instanceof Joi.ValidationError) {
+            return responds.error(req, res, { message: error.details[0].message }, 422);
+        }
+
         return responds.error(req, res, { message: error.message }, 500);
     }
 }

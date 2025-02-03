@@ -54,6 +54,9 @@ const getStatistics = async (req, res) => {
             by: ['categoria'],
             _count: {
                 id: true
+            },
+            where: {
+                deletedAt: null
             }
         });
 
@@ -66,7 +69,11 @@ const getStatistics = async (req, res) => {
         const totalEstudiantes = await prisma.estudiante.count();
 
         // 5. Total de cursos
-        const totalCursos = await prisma.cursos.count();
+        const totalCursos = await prisma.cursos.count({
+            where: {
+                deletedAt: null
+            }
+        });
 
         // 6. Devolver los datos
         const estadisticasData = {
