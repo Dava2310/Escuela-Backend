@@ -34,6 +34,8 @@ const getCourses = async (req, res) => {
         for (let course of courses) {
             course.estado = 'activo';
 
+            course.cantidadSecciones = course.secciones.length;
+
             // Contar la cantidad total de estudiantes en todas las secciones del curso
             let totalEstudiantes = 0;
             for (let seccion of course.secciones) {
@@ -174,17 +176,24 @@ const getStudentCourses = async (req, res) => {
             }
         });
 
-        // Agregar la propiedad 'inscrito' con el estado correspondiente de la inscripción más reciente
-        const coursesWithEnrollment = courses.map(course => ({
-            ...course,
-            inscrito: course.secciones.reduce((state, seccion) => {
+        const coursesWithEnrollment = courses.map(course => {
+            let estadoInscripcion = 'No Inscrito';
+        
+            for (const seccion of course.secciones) {
                 const inscripcion = seccion.inscripciones[0]; // Obtener la inscripción más reciente si existe
                 if (inscripcion) {
-                    return inscripcion.estado === 'No Aprobada' ? 'No Inscrito' : inscripcion.estado;
+                    if (inscripcion.estado !== 'No Aprobada') {
+                        estadoInscripcion = inscripcion.estado; // Asigna el estado más relevante encontrado
+                        break; // Si ya encontramos una inscripción válida, no es necesario seguir revisando
+                    }
                 }
-                return 'No Inscrito'; // Si no hay inscripción, se considera 'No Inscrito'
-            }, 'No Inscrito')
-        }));
+            }
+        
+            return {
+                ...course,
+                inscrito: estadoInscripcion
+            };
+        });
 
         return responds.success(req, res, { message: 'Cursos obtenidos exitosamente.', data: coursesWithEnrollment }, 200);
     } catch (error) {
@@ -192,6 +201,60 @@ const getStudentCourses = async (req, res) => {
         return responds.error(req, res, { message: 'Error al obtener los cursos.' }, 500);
     }
 };
+
+const getStudentCoursesEnrolled = async (req, res) => {
+    try {
+        
+        const userId = req.user.id
+
+        const estudiante = await prisma.estudiante.findFirst({
+            where: {
+                usuarioId: userId
+            }
+        })
+
+        if (!estudiante) {
+            return responds.error(req, res, { message: 'Ha sucedido un error. Intente de nuevo'}, 404);
+        }
+
+        const courses = await prisma.cursos.findMany({
+            where: {
+                deletedAt: null,
+                secciones: {
+                    some: { // Verifica que al menos una sección tenga la inscripción aprobada del estudiante
+                        inscripciones: {
+                            some: {
+                                estudianteId: estudiante.id,
+                                deletedAt: null,
+                                estado: 'Aprobada'
+                            }
+                        }
+                    }
+                }
+            },
+            include: {
+                secciones: {
+                    include: {
+                        inscripciones: {
+                            where: {
+                                estudianteId: estudiante.id,
+                                deletedAt: null,
+                                estado: 'Aprobada'
+                            },
+                            orderBy: { createdAt: 'desc' },
+                            select: { estado: true, createdAt: true }
+                        }
+                    }
+                }
+            }
+        });
+
+        return responds.success(req, res, { data: courses}, 200);
+
+    } catch (error) {
+        return responds.error(req, res, { message: error.message}, 500);
+    }
+}
 
 const createCourse = async (req, res) => {
     try {
@@ -325,5 +388,6 @@ export default {
     createCourse,
     updateCourse,
     deleteCourse,
-    getCourses_Schedule
+    getCourses_Schedule,
+    getStudentCoursesEnrolled
 }

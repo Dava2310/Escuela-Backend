@@ -431,5 +431,15 @@ const recoverStepTwo = async (req, res) => {
     }
 }
 
-export default { viewUser, editUser, deleteUser, getUsers, getOneUser, changePersonalData, recoverStepOne, recoverStepTwoGet, recoverStepTwo };
+export default { 
+    viewUser, 
+    editUser, 
+    deleteUser, 
+    getUsers, 
+    getOneUser, 
+    changePersonalData, 
+    recoverStepOne, 
+    recoverStepTwoGet, 
+    recoverStepTwo 
+};
 

@@ -24,8 +24,6 @@ const createSchedule = async (req, res) => {
         // Validación de los datos entrantes con Joi
         const data = await schema.validateAsync(req.body);
 
-        console.log(data)
-
         // Verificando que el curso exista en la base de datos
         const course = await prisma.cursos.findUnique({
             where: {
@@ -36,6 +34,26 @@ const createSchedule = async (req, res) => {
         if (!course) {
             return responds.error(req, res, { message: 'Curso no encontrado.' }, 404);
         }
+
+        // Verificando la existencia de la seccion y que no tenga horario
+        const seccion = await prisma.seccion.findFirst({
+            where: {
+                id: data.seccionId
+            },
+            include: {
+                horario: true
+            }
+        })
+
+        if (!seccion) {
+            return responds.error(req, res, { message: 'La sección indicada no existe.'}, 404);
+        }
+
+        // Si el horario no es null, queriendo decir que si tiene horario, no se debe crear un nuevo horario
+        if (!(seccion.horario === null)) {
+            return responds.error(req, res, { message: 'La sección ya tiene horario asignado. Si desea editarlo, vaya a la gestión de horarios.'}, 401);
+        }
+
 
         // Verificando que la fecha de inicio y la fecha de finalización sean válidas
         if (new Date(data.fechaInicio) > new Date(data.fechaFinal)) {

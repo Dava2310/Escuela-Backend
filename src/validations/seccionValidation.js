@@ -8,4 +8,11 @@ const seccionRegister = Joi.object({
     cursoId: Joi.number().required()
 })
 
-export default seccionRegister;
+const seccionEdit = Joi.object({
+    codigo: Joi.string().required(),
+    capacidad: Joi.number().min(1),
+    salon: Joi.string().required(),
+    profesorId: Joi.number().required(),
+})
+
+export default {seccionRegister, seccionEdit};

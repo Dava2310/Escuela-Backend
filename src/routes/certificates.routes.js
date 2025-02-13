@@ -11,6 +11,12 @@ router.get('/',
     ctrl.getCertificadosData
 )
 
+// Ruta GET para que el estudiante consulte sus certificados
+router.get('/student/',
+    auth.ensureAuthenticated,
+    ctrl.getCertificadosByStudent
+)
+
 // Ruta POST para crear un certificado
 router.post('/student/:studentId/seccion/:seccionId',
     auth.ensureAuthenticated,

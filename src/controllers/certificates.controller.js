@@ -113,6 +113,46 @@ const getCertificadosData = async (req, res) => {
     }
 };
 
+
+const getCertificadosByStudent = async (req, res) => {
+    try {
+        
+        const userId = req.user.id;
+
+        const student = await prisma.estudiante.findFirst({
+            where: {
+                usuarioId: userId
+            }
+        })
+
+        if (!student) {
+            return responds.error(req, res, { message: 'Ha sucedido un error. Intente de nuevo.'}, 500);
+        }
+
+        const certificates = await prisma.certificado.findMany({
+            where: {
+                estudianteId: student.id
+            },
+            include: {
+                seccion: {
+                    include: {
+                        curso: true
+                    }
+                }
+            }
+        })
+
+        for (let certificate of certificates) {
+            certificate.nombreCurso = certificate.seccion.curso.nombre;
+        }
+
+        return responds.success(req, res, { data: certificates }, 200);
+
+    } catch (error) {
+       return responds.error(req, res, { message: error.message}, 500); 
+    }
+}
+
 const createCertificado = async (req, res) => {
     try {
 
@@ -200,4 +240,5 @@ export default {
     getCertificadosData,
     createCertificado,
     deleteCertificado,
+    getCertificadosByStudent
 };

@@ -8,6 +8,9 @@ const router = Router();
 // Ruta GET para conseguir todos los cursos de la academia, con la informacion de si esta inscrito o no un estudiante
 router.get('/student/', auth.ensureAuthenticated, ctrl.getStudentCourses)
 
+// Ruta GET para que un estudiante obtenga sus cursos unicamente
+router.get('/student/enrolled', auth.ensureAuthenticated, ctrl.getStudentCoursesEnrolled)
+
 // Ruta GET para conseguir todos los cursos
 router.get('/', auth.ensureAuthenticated, ctrl.getCourses)
 

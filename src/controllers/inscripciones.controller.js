@@ -28,6 +28,9 @@ const getInscripciones = async (req, res) => {
             },
             where: {
                 deletedAt: null
+            },
+            orderBy: {
+                id: 'desc'
             }
         })
 
@@ -40,6 +43,48 @@ const getInscripciones = async (req, res) => {
 
     } catch (error) {
         return responds.error(req, res, { message: error.message }, 500);
+    }
+}
+
+const getInscripcionesByStudent = async (req, res) => {
+    try {
+
+        const userId = req.user.id;
+
+        const estudiante = await prisma.estudiante.findFirst({
+            where: {
+                usuarioId: userId
+            }
+        })
+
+        if (!estudiante) {
+            return responds.error(req, res, { message: 'Ha sucedido un error. Intente de nuevo.'}, 404);
+        }
+
+        const inscripciones = await prisma.inscripcion.findMany({
+            where: {
+                AND: [
+                    { deletedAt: null},
+                    { estudianteId: estudiante.id}
+                ]
+            },
+            include: {
+                seccion: {
+                    include: {
+                        curso: true
+                    }
+                }
+            }
+        })
+
+        for (let inscripcion of inscripciones) {
+            inscripcion.nombreCurso = inscripcion.seccion.curso.nombre;
+        }
+
+        return responds.success(req, res, { data: inscripciones}, 200);
+
+    } catch (error) {
+        return responds.error(req, res, { message: error.message}, 500);
     }
 }
 
@@ -166,6 +211,10 @@ const deleteInscripcion = async (req, res) => {
             return responds.error(req, res, { message: 'Inscripción no encontrada.' }, 404);
         }
 
+        if (inscripcion.estado === 'Aprobada') {
+            return responds.error(req, res, { message: 'Inscripción ya aprobada, no se puede eliminar.'}, 401);
+        }
+
         // Eliminar la relación Estudiante_Seccion si existe
         const relacionEstudianteSeccion = await prisma.estudiante_Seccion.findFirst({
             where: {
@@ -286,6 +335,7 @@ const noAprobarInscripcion = async (req, res) => {
 
 export default {
     getInscripciones,
+    getInscripcionesByStudent,
     getOneInscripcion,
     createInscripcion,
     updateInscripcion,

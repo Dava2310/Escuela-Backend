@@ -10,6 +10,9 @@ const router = Router();
 // Ruta GET para conseguir todas las inscripciones
 router.get('/', auth.ensureAuthenticated, ctrl.getInscripciones);
 
+// Ruta GET para conseguir todas las inscripciones por el estudiante
+router.get('/student/', auth.ensureAuthenticated, ctrl.getInscripcionesByStudent)
+
 // Ruta GET para conseguir una inscripcion
 router.get('/:inscripcionId', auth.ensureAuthenticated, validateAndConvertId('inscripcionId'), ctrl.getOneInscripcion);
 

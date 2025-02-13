@@ -18,7 +18,7 @@ const createSeccion = async (req, res) => {
     try {
 
         // Consiguiendo los datos para la creacion de la seccion
-        const data = await schema.validateAsync(req.body);
+        const data = await schema.seccionRegister.validateAsync(req.body);
 
         // Verificando la existencia del profesor
         const teacher = await prisma.profesor.findFirst({
@@ -72,23 +72,102 @@ const createSeccion = async (req, res) => {
     }
 }
 
-const getSecciones = async (req, res) => {
+const updateSeccion = async (req, res) => {
     try {
+        
+        const { seccionId } = req.params;
 
-        const { cursoId } = req.params;
+        // Consiguiendo los datos para la creacion de la seccion
+        const data = await schema.seccionEdit.validateAsync(req.body);
 
-        const secciones = await prisma.seccion.findMany({
+        // Verificando la existencia de la seccion
+        const seccion = await prisma.seccion.findFirst({
             where: {
-                cursoId: cursoId
+                id: seccionId
             }
         })
 
-        return responds.success(req, res, { data: secciones }, 200);
+        if (!seccion) {
+            return responds.error(req, res, { message: 'Seccion no encontrada.'}, 404);
+        }
+
+        // Verificando la existencia del profesor
+        const teacher = await prisma.profesor.findFirst({
+            where: {
+                id: data.profesorId
+            }
+        })
+
+        if (!teacher) {
+            return responds.error(req, res, { message: 'Profesor no encontrado.' }, 404);
+        }
+
+        // Verificando que sea unico el codigo
+        const duplicatedSeccion = await prisma.seccion.findFirst({
+            where: {
+                AND: [
+                    { codigo: data.codigo },
+                    { NOT: {id: seccion.id}}
+                ]
+                
+            }
+        })
+
+        if (duplicatedSeccion) {
+            return responds.error(req, res, { message: 'Codigo duplicado.' }, 409);
+        }
+
+        // Haciendo la actualización de datos básicos
+        await prisma.seccion.update({
+            where: {
+                id: seccion.id
+            },
+            data: {
+                capacidad: data.capacidad,
+                salon: data.salon,
+                codigo: data.codigo,
+                profesorId: data.profesorId
+            }
+        })
+
+        // Mensaje de respuesta
+        return responds.success(req, res, { message: 'Sección actualizada exitosamente.'}, 200);
 
     } catch (error) {
         return responds.error(req, res, { message: error.message }, 500);
     }
 }
+
+const getSecciones = async (req, res) => {
+    try {
+        const { cursoId } = req.params;
+
+        const secciones = await prisma.seccion.findMany({
+            where: {
+                cursoId: Number(cursoId) // Asegurar que cursoId es un número
+            },
+            include: {
+                horario: {
+                    include: {
+                        dias: true // Incluir los días del horario
+                    }
+                },
+                curso: true
+            }
+        });
+
+        // Transformar los resultados para incluir `diasRepeticion`
+        const seccionesConDias = secciones.map(seccion => ({
+            ...seccion,
+            nombreCurso: seccion.curso.nombre,
+            diasRepeticion: seccion.horario?.dias.map(dia => dia.dia) || [] // Extraer solo los nombres de los días
+        }));
+
+        return responds.success(req, res, { data: seccionesConDias }, 200);
+    } catch (error) {
+        return responds.error(req, res, { message: error.message }, 500);
+    }
+};
 
 const getStudents = async (req, res) => {
     try {
@@ -136,7 +215,7 @@ const getStudents = async (req, res) => {
 
 const getTeacherSections = async (req, res) => {
     try {
-        const { userId } = req.user.id;
+        const userId  = req.user.id;
 
         // Obtener al profesor basado en el usuario
         const teacher = await prisma.profesor.findFirst({
@@ -178,6 +257,7 @@ const getTeacherSections = async (req, res) => {
             id: section.id,
             codigo: section.codigo,
             nombre: section.curso.nombre,
+            salon: section.salon,
             horario: section.horario
                 ? {
                     fechaInicio: section.horario.fechaInicio,
@@ -360,5 +440,6 @@ export default {
     getStudents,
     getTeacherSections,
     aprobarEstudiante,
-    reprobarEstudiante
+    reprobarEstudiante,
+    updateSeccion
 }
