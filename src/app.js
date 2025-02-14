@@ -16,6 +16,7 @@ import seccionesRoutes from './routes/secciones.routes.js'
 import inscripcionesRoutes from './routes/inscripciones.routes.js'
 import statisticsRoutes from './routes/statistics.routes.js'
 import certificatesRoutes from './routes/certificates.routes.js'
+import reportCertificatesRoutes from './routes/reportCertificate.routes.js'
 
 // Import Swagger setup
 import swaggerSetup from './swagger.js';  // Ajusta la ruta si es necesario
@@ -48,6 +49,7 @@ app.use('/api/secciones', seccionesRoutes)
 app.use('/api/inscripciones', inscripcionesRoutes)
 app.use('/api/statistics', statisticsRoutes)
 app.use('/api/certificates', certificatesRoutes)
+app.use('/api/reportCertificates', reportCertificatesRoutes)
 
 // Main Route
 app.get('/', (req, res) => {

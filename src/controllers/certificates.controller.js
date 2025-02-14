@@ -1,6 +1,8 @@
 import Joi from "joi"
 
 import responds from '../red/responds.js';
+import PDFDocument from "pdfkit";
+import createReport from "../reports/reportCertificate.js";
 // --------------------
 // Prisma Module
 // --------------------
@@ -236,9 +238,65 @@ const deleteCertificado = async (req, res) => {
     }
 };
 
+const reportCertificado = async (req, res) => {
+    try {
+        
+        const { certificadoId } = req.params;
+
+        const certificado = await prisma.certificado.findFirst({
+            where: {
+                id: certificadoId
+            },
+            include: {
+                estudiante: {
+                    include: {
+                        usuario: true
+                    }
+                },
+                seccion: {
+                    include: {
+                        profesor: {
+                            include: {
+                                usuario: true
+                            }
+                        },
+                        curso: true
+                    }
+                }
+            }
+        })
+
+        // Configura el encabezado para enviar el PDF como una descarga
+        res.writeHead(200, {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': 'attachment; filename=reporte.pdf' // Nombre del archivo de descarga
+        });
+
+        // Crea un nuevo documento PDF y pásalo al flujo de respuesta
+        const doc = new PDFDocument({ size: 'A4', layout: 'landscape', margin: 10 });
+
+        // Adjunta el flujo del documento PDF al flujo de respuesta
+        doc.pipe(res);
+
+        doc.rect(0, 0, doc.page.width, doc.page.height).fill('#fff');
+
+        // Genera el contenido del PDF
+        createReport(doc, certificado.estudiante, certificado, certificado.seccion.profesor, certificado.seccion.curso.nombre); // Pasa el documento PDF al método createReport
+
+        // Finaliza el documento PDF
+        doc.end();
+
+        res.send("invoice")
+
+    } catch (error) {
+        // return responds.error(req, res, { message: error.message}, 500);
+    }
+}
+
 export default {
     getCertificadosData,
     createCertificado,
     deleteCertificado,
-    getCertificadosByStudent
+    getCertificadosByStudent,
+    reportCertificado
 };
